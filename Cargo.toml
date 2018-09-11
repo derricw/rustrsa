@@ -1,0 +1,9 @@
+[package]
+name = "rustrsa"
+version = "0.1.0"
+authors = ["derricw <derricw@alleninstitute.org>"]
+
+[dependencies]
+rand = "0.5"
+mod_exp = "1.0"
+ramp = "0.5"
