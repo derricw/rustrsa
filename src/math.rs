@@ -1,5 +1,9 @@
-
-//use ramp::RandomInt;
+/// math.rs
+/// 
+/// Math required for public key cryptography.
+/// Uses external `ramp` crate for arbitrary integer sizes.
+/// 
+use ramp::RandomInt;
 use ramp::Int;
 
 /// simple prime test using arbitrary length `Int` structures
@@ -36,45 +40,84 @@ pub fn simple_is_prime(num: &Int) -> bool {
     }
 }
 
+/// Rabin-Miller primality testing
+/// probabilistic, use higher K to reduce false negatives
+/// at the cost of speed
+/// TODO: use the deterministic version
+/// 
+pub fn rabin_miller(n: &Int, k: u8) -> bool {
+    if n % 2 == 0 { return false };
+    let mut d = n-1;
+    let mut r = Int::zero();
+    // find r and d
+    while &d % 2 == 0 {
+        d /= 2;
+        r += 1;
+    }
+    // println!("d: {}\nr: {}", d, r);
+    // witness loop
+    let mut rng = rand::thread_rng();
+    let one = Int::one();
+    let two = Int::from(2);
+    for _attempts in 0..k {
+        let max = Int::clone(&n) - 1;
+        let a = rng.gen_int_range(&two, &max);
+        let mut x = a.pow_mod(&d, &n);
+        // println!("a: {}\nx: {}", a, x);
+        if &x != &one {
+            let mut i = Int::zero();
+            while &x != &(n-1) {
+                if &i == &(Int::clone(&r)-1) {
+                    return false;
+                } else {
+                    x = x.pow_mod(&two, &n);
+                    i += 1;
+                    // println!("x: {} i: {}", x, i);
+                }
+            }
+        }
+    }
+    // we didn't find a witness after 
+    // k attempts so it is probably prime
+    true
+}
 
-// fn rabin_miller(n: &Int, k: u8) -> bool {
-//     if n % 2 == 0 { return false };
-//     let mut d = n-1;
-//     let mut r = 0;
-//     // find r and d
-//     while d % 2 == 0 {
-//         d /= 2;
-//         r += 1;
-//     }
-//     // witness loop
-//     let mut rng = rand::thread_rng();
-//     for _attempts in 0..k {
-//         let a = rng.gen_range(2, n-1);
-//         let mut x = mod_exp(a, d, n);
-//         if x != 1 {
-//             let mut i = 0;
-//             while x != (n-1) {
-//                 if i == (r-1) {
-//                     return false;
-//                 } else {
-//                     x = x.pow(2) % n;
-//                     i += 1;
-//                     println!("x: {} i: {}", x, i)
-//                 }
-//             }
-//         }
-//     }
-//     // we didn't find a witness after 
-//     // k attempts so it is probably prime
-//     true
-// }
+
+/// Fancy prime checker that checks small
+///     numbers first then tries R-M
+pub fn is_prime(n: &Int) -> bool {
+    let mut max: u32 = 1000;
+    if n < &Int::from(max) {
+        max = u32::from(n) - 1;
+    }
+    for i in 2..max {
+        if n % &Int::from(i) == 0 {
+            return false;
+        }
+    }
+    return rabin_miller(n, 5);
+}
+
+
+
+pub fn find_random_prime(bits: usize) -> Int {
+    let mut rng = rand::thread_rng();
+    loop {
+        let n = rng.gen_uint(bits);
+        if is_prime(&n) {
+            return n
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    //use ramp::RandomInt;
     
-    fn is_prime_works() {
+    #[test]
+    fn simple_is_prime_works() {
         //let mut rng = rand::thread_rng();
         //let size: usize = 2048;
         //let num = rng.gen_uint(size);
@@ -83,5 +126,39 @@ mod tests {
         
         assert!(simple_is_prime(&prime));
         assert!(!simple_is_prime(&composite));
+    }
+
+    #[test]
+    fn rabin_miller_works() {
+        // let mut rng = rand::thread_rng();
+        // let size: usize = 2048;
+        // let num = rng.gen_uint(size);
+        
+        assert!(rabin_miller(&Int::from(67), 5));
+        assert!(!rabin_miller(&Int::from(66), 5));
+
+        // lets try a mersenne prime with 386 digits
+        let bignum = Int::from(2).pow(1279) - 1;
+        // println!("{}", bignum);
+        assert!(rabin_miller(&bignum, 5));
+
+    }
+
+    #[test]
+    fn is_prime_works() {
+        assert!(is_prime(&Int::from(67)));
+        assert!(!is_prime(&Int::from(66)));
+
+        // lets try a mersenne prime with 386 digits
+        let bignum = Int::from(2).pow(1279) - 1;
+        // println!("{}", bignum);
+        assert!(is_prime(&bignum));
+    }
+
+    #[test]
+    fn find_random_prime_works() {
+        let p: Int = find_random_prime(512);
+        assert!(is_prime(&p));
+        // println!("{}", p)
     }
 }
