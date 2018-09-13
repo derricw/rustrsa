@@ -1,5 +1,5 @@
-//extern crate ramp;
-//use self::ramp::Int;
+
+use ramp::RandomInt;
 use ramp::Int;
 
 /// simple prime test using arbitrary length `Int` structures
@@ -37,3 +37,49 @@ pub fn simple_is_prime(num: &Int) -> bool {
 }
 
 
+// fn rabin_miller(n: &Int, k: u8) -> bool {
+//     if n % 2 == 0 { return false };
+//     let mut d = n-1;
+//     let mut r = 0;
+//     // find r and d
+//     while d % 2 == 0 {
+//         d /= 2;
+//         r += 1;
+//     }
+//     // witness loop
+//     let mut rng = rand::thread_rng();
+//     for _attempts in 0..k {
+//         let a = rng.gen_range(2, n-1);
+//         let mut x = mod_exp(a, d, n);
+//         if x != 1 {
+//             let mut i = 0;
+//             while x != (n-1) {
+//                 if i == (r-1) {
+//                     return false;
+//                 } else {
+//                     x = x.pow(2) % n;
+//                     i += 1;
+//                     println!("x: {} i: {}", x, i)
+//                 }
+//             }
+//         }
+//     }
+//     // we didn't find a witness after 
+//     // k attempts so it is probably prime
+//     true
+// }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    
+    fn is_prime_works() {
+        let mut rng = rand::thread_rng();
+        let size: usize = 2048;
+        let num = rng.gen_uint(size);
+        let is_it_prime = simple_is_prime(&num);
+
+        println!("{} is prime: {}", num, is_it_prime);
+    }
+}
