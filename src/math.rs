@@ -1,5 +1,5 @@
 
-use ramp::RandomInt;
+//use ramp::RandomInt;
 use ramp::Int;
 
 /// simple prime test using arbitrary length `Int` structures
@@ -75,11 +75,13 @@ mod tests {
     #[test]
     
     fn is_prime_works() {
-        let mut rng = rand::thread_rng();
-        let size: usize = 2048;
-        let num = rng.gen_uint(size);
-        let is_it_prime = simple_is_prime(&num);
-
-        println!("{} is prime: {}", num, is_it_prime);
+        //let mut rng = rand::thread_rng();
+        //let size: usize = 2048;
+        //let num = rng.gen_uint(size);
+        let prime = Int::from(67);
+        let composite = Int::from(66);
+        
+        assert!(simple_is_prime(&prime));
+        assert!(!simple_is_prime(&composite));
     }
 }
